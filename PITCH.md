@@ -6,7 +6,7 @@ Built: We fixed run_agent's tool loop, removed a duplicate tool registration, an
 
 Does: For a customer whose flight got cancelled, it looks up the booking, checks the real flight status, resolves what they're owed under policy, and explains their options in plain language — stopping short of finalizing anything on its own.
 
-Number: Made the process about ~177x cheaper.
+Number: Made the process about ~177x cheaper per resolved contact.
 
 Guardrail: The agent never attempted to finalize a rebooking or issue a voucher without the customer choosing a path first. In this trace it made exactly 3 tool calls (lookup, status check, policy check) and stopped at presenting options — proof the "no auto-confirm" rule held on a real case, not just in the schema text.
 
