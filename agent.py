@@ -65,19 +65,19 @@ def run_agent(pnr: str, last_name: str, message: str) -> str:            # ✏�
         thinking={"type": "adaptive"}, tools=tools, messages=messages,
     )
 
-    answer = ""
-    turns = 1
-    while response.stop_reason == "tool_use" and turns < MAX_TOOL_CALLS:
-        messages.append({"role": "assistant", "content": text_of(response)})
+    tool_calls_made = 0
+    while response.stop_reason == "tool_use" and tool_calls_made < MAX_TOOL_CALLS:
+        tool_calls_made += sum(
+            1 for block in response.content if getattr(block, "type", None) == "tool_use"
+        )
+        messages.append({"role": "assistant", "content": response.content})
         messages.append({"role": "user", "content": tool_results(response)})
-        answer = text_of(response)
         response = client.messages.create(
             model=MODEL, max_tokens=4096, system=runtime_preamble() + SYSTEM_PROMPT + TONE_ADDENDUM,
             thinking={"type": "adaptive"}, tools=tools, messages=messages,
         )
-        turns += 1
 
-    return answer
+    return text_of(response)
 
 
 def tool_list() -> List[Dict[str, Any]]:                   # ✏️ Build 2, step 2.2
@@ -119,14 +119,14 @@ def build_tools() -> List[Dict[str, Any]]:                 # ✏️ Build 1, ste
                 "type": "object",
                 "properties": {
                     "flight_no": {"type": "string"},
-                    "date": {"type": "string", "description": "MM/DD/YYYY"},
+                    "date": {"type": "string", "description": "YYYY-MM-DD"},
                 },
                 "required": ["flight_no", "date"],
             },
         },
         {
             "name": "search_alternatives",
-            "description": "search",
+            "description": "Retrieve a Larkspur reservation by confirmation code (PNR) and searches for alternate flight options",
             "input_schema": {
                 "type": "object",
                 "properties": {"pnr": {"type": "string"}},
